@@ -184,7 +184,7 @@ class AlumniProvider extends ChangeNotifier {
 
   Future<void> sendConnectionRequest(String recipientId, [String? message]) async {
     try {
-      await AlumniAPI.sendConnectionRequest(recipientId, message);
+      await AlumniAPI.sendConnectionRequest(recipientId, message ?? '');
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -482,7 +482,10 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> sendMessage(String conversationId, String message) async {
     try {
-      await ChatAPI.sendMessage(conversationId, message);
+      await ChatAPI.sendMessage({
+        'conversationId': conversationId,
+        'message': message,
+      });
       await loadMessages(conversationId);
     } catch (e) {
       _error = e.toString();
@@ -519,6 +522,7 @@ class EventsProvider extends ChangeNotifier {
   List<dynamic> _allEvents = [];
   List<dynamic> _myEvents = [];
   List<dynamic> _upcomingEvents = [];
+  List<dynamic> _approvedEvents = [];
   Map<String, dynamic>? _eventDetails;
   bool _isLoading = false;
   String? _error;
@@ -526,6 +530,7 @@ class EventsProvider extends ChangeNotifier {
   List<dynamic> get allEvents => _allEvents;
   List<dynamic> get myEvents => _myEvents;
   List<dynamic> get upcomingEvents => _upcomingEvents;
+  List<dynamic> get approvedEvents => _approvedEvents;
   Map<String, dynamic>? get eventDetails => _eventDetails;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -606,6 +611,21 @@ class EventsProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  Future<void> loadApprovedEvents() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _approvedEvents = await EventsAPI.getApprovedEvents();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
 
 class ResumeProvider extends ChangeNotifier {
@@ -676,7 +696,7 @@ class ResumeProvider extends ChangeNotifier {
 
   Future<void> addSkill(String skill) async {
     try {
-      await ResumeAPI.addSkill(skill);
+      await ResumeAPI.addSkill({'name': skill});
       await loadMyResume();
     } catch (e) {
       _error = e.toString();
@@ -753,7 +773,7 @@ class ConnectionsProvider extends ChangeNotifier {
 
   Future<void> sendConnectionRequest(String userId, [String? message]) async {
     try {
-      await ConnectionAPI.sendConnectionRequest(userId, message);
+      await ConnectionAPI.sendConnectionRequest(userId, message ?? '');
       await loadSentRequests();
       await loadSuggestedConnections();
     } catch (e) {

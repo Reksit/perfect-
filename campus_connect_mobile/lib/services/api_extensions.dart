@@ -108,6 +108,23 @@ class ChatAPI {
     final response = await ApiService.post('/chat/send', data);
     return response.data;
   }
+
+  static Future<List<dynamic>> getAllConversations() async {
+    final response = await ApiService.get('/chat/conversations');
+    return response.data;
+  }
+
+  static Future<List<dynamic>> getMessages(String conversationId) async {
+    final response = await ApiService.get('/chat/conversations/$conversationId/messages');
+    return response.data;
+  }
+
+  static Future<Map<String, dynamic>> createConversation(String recipientId) async {
+    final response = await ApiService.post('/chat/conversations', {
+      'recipientId': recipientId,
+    });
+    return response.data;
+  }
 }
 
 // Management API
@@ -205,6 +222,31 @@ class EventsAPI {
   static Future<Map<String, dynamic>> updateAttendance(String eventId, bool attending) async {
     final response = await ApiService.post('/api/events/$eventId/attendance', 
         {'attending': attending});
+    return response.data;
+  }
+
+  static Future<List<dynamic>> getAllEvents() async {
+    final response = await ApiService.get('/events');
+    return response.data;
+  }
+
+  static Future<List<dynamic>> getMyEvents() async {
+    final response = await ApiService.get('/events/my');
+    return response.data;
+  }
+
+  static Future<Map<String, dynamic>> getEventDetails(String eventId) async {
+    final response = await ApiService.get('/events/$eventId');
+    return response.data;
+  }
+
+  static Future<Map<String, dynamic>> registerForEvent(String eventId) async {
+    final response = await ApiService.post('/events/$eventId/register', {});
+    return response.data;
+  }
+
+  static Future<Map<String, dynamic>> createEvent(Map<String, dynamic> eventData) async {
+    final response = await ApiService.post('/events', eventData);
     return response.data;
   }
 }
@@ -306,6 +348,11 @@ class ConnectionAPI {
     final response = await ApiService.get('/users/search?q=${Uri.encodeComponent(query)}');
     return response.data;
   }
+
+  static Future<List<dynamic>> getMyConnections() async {
+    final response = await ApiService.get('/connections/my');
+    return response.data;
+  }
 }
 
 // Student API
@@ -396,6 +443,14 @@ class AlumniAPI {
 
   static Future<Map<String, dynamic>> getAlumniStats() async {
     final response = await ApiService.get('/alumni/stats');
+    return response.data;
+  }
+
+  static Future<Map<String, dynamic>> sendConnectionRequest(String recipientId, String message) async {
+    final response = await ApiService.post('/alumni/connection-request', {
+      'recipientId': recipientId,
+      'message': message,
+    });
     return response.data;
   }
 }
@@ -505,5 +560,29 @@ class ResumeAPI {
 
   static Future<void> deleteResume() async {
     await ApiService.delete('/resume');
+  }
+
+  static Future<Map<String, dynamic>?> getMyResume() async {
+    try {
+      final response = await ApiService.get('/resume/my');
+      return response.data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateMyResume(Map<String, dynamic> resumeData) async {
+    final response = await ApiService.put('/resume/my', resumeData);
+    return response.data;
+  }
+
+  static Future<Map<String, dynamic>> addExperience(Map<String, dynamic> experience) async {
+    final response = await ApiService.post('/resume/experience', experience);
+    return response.data;
+  }
+
+  static Future<Map<String, dynamic>> addSkill(Map<String, dynamic> skill) async {
+    final response = await ApiService.post('/resume/skills', skill);
+    return response.data;
   }
 }

@@ -14,6 +14,12 @@ class AssessmentProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  int get pendingGradingCount {
+    return _professorAssessments.where((assessment) => 
+      assessment['status'] == 'submitted' || assessment['needsGrading'] == true
+    ).length;
+  }
+
   Future<void> loadStudentAssessments() async {
     _isLoading = true;
     _error = null;
@@ -182,103 +188,6 @@ class TaskProvider extends ChangeNotifier {
       rethrow;
     } finally {
       _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  void clearError() {
-    _error = null;
-    notifyListeners();
-  }
-}
-
-class ChatProvider extends ChangeNotifier {
-  List<dynamic> _conversations = [];
-  List<dynamic> _users = [];
-  List<dynamic> _chatHistory = [];
-  bool _isLoading = false;
-  String? _error;
-
-  List<dynamic> get conversations => _conversations;
-  List<dynamic> get users => _users;
-  List<dynamic> get chatHistory => _chatHistory;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-
-  Future<void> loadConversations() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _conversations = await ChatAPI.getConversations();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> loadUsers() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _users = await ChatAPI.getAllUsers();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> loadChatHistory(String userId) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _chatHistory = await ChatAPI.getChatHistory(userId);
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<Map<String, dynamic>> sendMessage(Map<String, dynamic> data) async {
-    try {
-      final result = await ChatAPI.sendMessage(data);
-      // Refresh conversations
-      await loadConversations();
-      return result;
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  Future<Map<String, dynamic>> sendAIMessage(String message) async {
-    try {
-      return await ChatAPI.sendAIMessage(message);
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  Future<void> markMessagesAsRead(String userId) async {
-    try {
-      await ChatAPI.markMessagesAsRead(userId);
-      await loadConversations(); // Refresh conversations
-    } catch (e) {
-      _error = e.toString();
       notifyListeners();
     }
   }

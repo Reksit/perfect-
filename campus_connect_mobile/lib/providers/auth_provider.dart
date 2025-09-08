@@ -98,6 +98,11 @@ class AuthProvider extends ChangeNotifier {
       _user = userData;
       _token = response['accessToken'];
       
+      // Store data locally for persistence
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', response['accessToken']);
+      await prefs.setString('user', jsonEncode(userData.toJson()));
+      
       print('Login successful, user data: ${userData.toJson()}');
     } catch (error) {
       print('Login error: $error');
@@ -143,6 +148,11 @@ class AuthProvider extends ChangeNotifier {
 
       _user = userData;
       _token = response['accessToken'];
+      
+      // Store data locally for persistence
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', response['accessToken']);
+      await prefs.setString('user', jsonEncode(userData.toJson()));
       
       print('OTP verification successful, user data: ${userData.toJson()}');
     } catch (error) {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/dashboard_card.dart';
 import '../../widgets/app_drawer.dart';
+import '../../services/api_service_complete.dart';
 
 class AlumniDashboard extends StatefulWidget {
   const AlumniDashboard({super.key});
@@ -12,6 +13,47 @@ class AlumniDashboard extends StatefulWidget {
 }
 
 class _AlumniDashboardState extends State<AlumniDashboard> {
+  Map<String, dynamic>? _alumniStats;
+  List<dynamic> _pendingRequests = [];
+  List<dynamic> _upcomingEvents = [];
+  Map<String, dynamic>? _alumniProfile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAlumniData();
+  }
+
+  Future<void> _loadAlumniData() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      // Load alumni stats
+      final stats = await AlumniAPI.getAlumniStats();
+      
+      // Load pending management requests
+      final requests = await AlumniAPI.getPendingManagementRequests();
+      
+      // Load approved events
+      final events = await EventsAPI.getApprovedEvents();
+      
+      // Load alumni profile
+      final profile = await AlumniAPI.getMyProfile();
+      
+      setState(() {
+        _alumniStats = stats;
+        _pendingRequests = requests;
+        _upcomingEvents = events.take(3).toList();
+        _alumniProfile = profile;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading alumni data: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,14 +76,14 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
       ),
       drawer: const AppDrawer(),
       body: RefreshIndicator(
-        onRefresh: () async {
-          // TODO: Implement refresh logic
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        onRefresh: _loadAlumniData,
+        child: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Welcome Card
               Consumer<AuthProvider>(
                 builder: (context, authProvider, child) {
@@ -114,7 +156,7 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '3',
+                              '${_alumniStats?['eventsHosted'] ?? 0}',
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blue.shade700,
@@ -144,7 +186,7 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '45',
+                              '${_alumniStats?['totalConnections'] ?? 0}',
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green.shade700,
@@ -152,6 +194,36 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
                             ),
                             Text(
                               'Connections',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Card(
+                      color: Colors.orange.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.pending_actions,
+                              size: 32,
+                              color: Colors.orange.shade700,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${_pendingRequests.length}',
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange.shade700,
+                              ),
+                            ),
+                            Text(
+                              'Pending',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -181,11 +253,11 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
                 children: [
                   DashboardCard(
                     title: 'Event Requests',
-                    subtitle: 'Manage event requests',
+                    subtitle: '${_pendingRequests.length} pending',
                     icon: Icons.event_note,
                     color: Colors.blue,
                     onTap: () {
-                      // TODO: Navigate to event requests
+                      Navigator.pushNamed(context, '/alumni-event-requests');
                     },
                   ),
                   DashboardCard(
@@ -194,25 +266,25 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
                     icon: Icons.network_check,
                     color: Colors.green,
                     onTap: () {
-                      // TODO: Navigate to alumni network
+                      Navigator.pushNamed(context, '/alumni-directory');
                     },
                   ),
                   DashboardCard(
-                    title: 'Mentorship',
-                    subtitle: 'Guide students',
-                    icon: Icons.school,
+                    title: 'Events',
+                    subtitle: 'View & manage events',
+                    icon: Icons.event,
                     color: Colors.purple,
                     onTap: () {
-                      // TODO: Navigate to mentorship
+                      Navigator.pushNamed(context, '/events');
                     },
                   ),
                   DashboardCard(
-                    title: 'Job Board',
-                    subtitle: 'Share opportunities',
-                    icon: Icons.work,
+                    title: 'Connections',
+                    subtitle: 'Manage connections',
+                    icon: Icons.people,
                     color: Colors.orange,
                     onTap: () {
-                      // TODO: Navigate to job board
+                      Navigator.pushNamed(context, '/connections');
                     },
                   ),
                   DashboardCard(
@@ -221,7 +293,7 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
                     icon: Icons.person,
                     color: Colors.teal,
                     onTap: () {
-                      // TODO: Navigate to profile
+                      Navigator.pushNamed(context, '/profile');
                     },
                   ),
                   DashboardCard(
@@ -230,7 +302,7 @@ class _AlumniDashboardState extends State<AlumniDashboard> {
                     icon: Icons.message,
                     color: Colors.red,
                     onTap: () {
-                      // TODO: Navigate to messages
+                      Navigator.pushNamed(context, '/user-chat');
                     },
                   ),
                 ],
